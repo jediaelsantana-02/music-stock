@@ -11,7 +11,6 @@ public class MusicStock {
 
         do {
             opcao = menuPrincipal().toUpperCase().trim();
-            System.out.println("--> " + opcao);
 
             switch (opcao) {
                 case String s when s.equals("1") || s.contains("CADASTRAR") -> {
@@ -32,6 +31,9 @@ public class MusicStock {
                 case String s when s.equals("6") || s.contains("RELATÓRIO") || s.contains("RELATORIO") -> {
                     System.out.println("-> Executando: Relatório do estoque");
                 }
+                case String s when s.equals("7") || s.contains("MOVIMENTAÇÕES") -> {
+                    System.out.println("-> Executando: MOVIMENTAÇÕES");
+                }
                 case String s when s.equals("0") || s.contains("SAIR") -> {
                     System.out.println("-> Saindo do sistema...");
                     scanner.close();
@@ -48,14 +50,15 @@ public class MusicStock {
     }
 
     public static String menuPrincipal() {
-        String[] menu = new String[7];
-        menu[0] = "Sair";
+        String[] menu = new String[8];
         menu[1] = "Cadastrar instrumento";
         menu[2] = "Listar instrumentos";
         menu[3] = "Buscar instrumento";
         menu[4] = "Realizar venda";
         menu[5] = "Repor estoque";
         menu[6] = "Relatório do estoque";
+        menu[7] = "Movimentações";
+        menu[0] = "Sair";
 
         System.out.println("--------------------------------------------------------------");
 
