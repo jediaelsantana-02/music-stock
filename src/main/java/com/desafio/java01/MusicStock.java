@@ -3,8 +3,15 @@ package com.desafio.java01;
 import java.util.Scanner;
 
 public class MusicStock {
-    private static final int CAPACIDADE_MAXIMA_ESTOQUE = 100;
+    private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
     private static final Scanner scanner = new Scanner(System.in);
+
+    private static int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static String[] nomes= new String[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static double[] precos = new double[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static int[] quantidades = new int[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static int indiceAtual;
+
 
     public static void main(String[] args) {
         String opcao;
