@@ -3,14 +3,14 @@ package com.desafio.java01;
 import java.util.Scanner;
 
 public class MusicStock {
-    private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
+    private static final int CAPACIDADE_MAXIMA_PRODUTOS = 1;
     private static final Scanner scanner = new Scanner(System.in);
 
     private static int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static String[] nomes= new String[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static String[] nomes = new String[CAPACIDADE_MAXIMA_PRODUTOS];
     private static double[] precos = new double[CAPACIDADE_MAXIMA_PRODUTOS];
     private static int[] quantidades = new int[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static int indiceAtual;
+    private static int indiceAtual = 0;
 
 
     public static void main(String[] args) {
@@ -22,6 +22,7 @@ public class MusicStock {
             switch (opcao) {
                 case String s when s.equals("1") || s.contains("CADASTRAR") -> {
                     System.out.println("-> Executando: Cadastrar instrumento");
+                    cadastrarInstrumento();
                 }
                 case String s when s.equals("2") || s.contains("LISTAR") -> {
                     System.out.println("-> Executando: Listar instrumentos");
@@ -78,5 +79,90 @@ public class MusicStock {
 
         System.out.println("Digite uma das opções do MENU");
         return scanner.nextLine();
+    }
+
+    public static void cadastrarInstrumento() {
+        System.out.println("=== Cadastro de Instrumento Musical ===");
+        System.out.println("Informe os dados do produto:");
+
+        System.out.println("Código do produto:");
+        int codigo = Integer.parseInt(scanner.nextLine());
+
+        System.out.println("Nome do produto:");
+        String nome = scanner.nextLine().trim();
+
+        System.out.println("Preço do produto:");
+        double preco = Double.parseDouble(scanner.nextLine());
+
+        System.out.println("Quantidade inicial em estoque:");
+        int quantidade = Integer.parseInt(scanner.nextLine());
+
+        if (verificarCapacidadeMaximaProduto() && verificarCodigoProduto(codigo)
+                && validarNomeProduto(nome) && validarPreco(preco) && validarQuantidade(quantidade)) {
+            inserirProdutoEstoque(codigo, nome, preco, quantidade);
+        }
+    }
+
+    private static boolean verificarCapacidadeMaximaProduto() {
+        if (indiceAtual >= CAPACIDADE_MAXIMA_PRODUTOS) {
+            System.out.println("Não é possível cadastrar. A capacidade máxima de produtos foi atingida.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean verificarCodigoProduto(int novoCodigoProduto) {
+
+        if (novoCodigoProduto < 1) {
+            System.out.println("Não é possível cadastrar. O código do produto deve ser maior que zero.");
+            return false;
+        }
+
+        for (int i = 0; i < indiceAtual; i++) {
+            if (novoCodigoProduto == codigos[i]) {
+                System.out.println("Não é possível cadastrar. O código do produto já está cadastrado.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean validarNomeProduto(String nomeProduto) {
+        return switch (nomeProduto) {
+            case String s when s.isBlank() -> {
+                System.out.println("Não é possível cadastrar. O nome está vazio!");
+                yield false;
+            }
+            default -> true;
+        };
+    }
+
+    private static boolean validarPreco(double precoProduto) {
+        if (precoProduto <= 0) {
+            System.out.println("Não é possível cadastrar. O preço do produto deve ser maior que zero.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean validarQuantidade(int quantidadeProduto) {
+
+        if (quantidadeProduto < 0) {
+            System.out.println("Não é possível cadastrar. A quantidade inicial não pode ser negativa.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void inserirProdutoEstoque(int codigo, String nome, double preco, int quantidade) {
+        codigos[indiceAtual] = codigo;
+        nomes[indiceAtual] = nome;
+        precos[indiceAtual] = preco;
+        quantidades[indiceAtual] = quantidade;
+        indiceAtual++;
     }
 }
