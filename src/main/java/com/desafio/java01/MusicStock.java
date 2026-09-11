@@ -1,9 +1,10 @@
 package com.desafio.java01;
 
+import java.util.Objects;
 import java.util.Scanner;
 
 public class MusicStock {
-    private static final int CAPACIDADE_MAXIMA_PRODUTOS = 1;
+    private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
     private static final Scanner scanner = new Scanner(System.in);
 
     private static int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
@@ -85,80 +86,75 @@ public class MusicStock {
         System.out.println("=== Cadastro de Instrumento Musical ===");
         System.out.println("Informe os dados do produto:");
 
-        System.out.println("Código do produto:");
-        int codigo = Integer.parseInt(scanner.nextLine());
+        try {
+            verificarCapacidadeMaximaProduto();
 
-        System.out.println("Nome do produto:");
-        String nome = scanner.nextLine().trim();
+            System.out.println("Código do produto:");
+            int codigo = Integer.parseInt(scanner.nextLine());
+            validarCodigoProduto(codigo);
+            verificarCodigoProdutoDuplicado(codigo);
 
-        System.out.println("Preço do produto:");
-        double preco = Double.parseDouble(scanner.nextLine());
+            System.out.println("Nome do produto:");
+            String nome = scanner.nextLine().trim();
+            validarNomeProduto(nome);
 
-        System.out.println("Quantidade inicial em estoque:");
-        int quantidade = Integer.parseInt(scanner.nextLine());
+            System.out.println("Preço do produto:");
+            double preco = Double.parseDouble(scanner.nextLine());
+            validarPreco(preco);
 
-        if (verificarCapacidadeMaximaProduto() && verificarCodigoProduto(codigo)
-                && validarNomeProduto(nome) && validarPreco(preco) && validarQuantidade(quantidade)) {
-            inserirProdutoEstoque(codigo, nome, preco, quantidade);
+            System.out.println("Quantidade inicial em estoque:");
+            int quantidade = Integer.parseInt(scanner.nextLine());
+            validarQuantidade(quantidade);
+
+            inserirProduto(codigo, nome, preco, quantidade);
+
+        } catch (NumberFormatException ex) {
+            System.out.println("❌ Entrada inválida. Insira apenas números.");
+        } catch (IllegalArgumentException ex) {
+            System.err.println("Não é possível cadastrar o produto. " + ex.getMessage());
         }
+
     }
 
-    private static boolean verificarCapacidadeMaximaProduto() {
+    private static void verificarCapacidadeMaximaProduto() {
         if (indiceAtual >= CAPACIDADE_MAXIMA_PRODUTOS) {
-            System.out.println("Não é possível cadastrar. A capacidade máxima de produtos foi atingida.");
-            return false;
+            throw new IllegalArgumentException("Capacidade máxima de produtos foi atingida.");
         }
-
-        return true;
     }
 
-    private static boolean verificarCodigoProduto(int novoCodigoProduto) {
-
-        if (novoCodigoProduto < 1) {
-            System.out.println("Não é possível cadastrar. O código do produto deve ser maior que zero.");
-            return false;
-        }
-
+    private static void verificarCodigoProdutoDuplicado(int novoCodigoProduto) {
         for (int i = 0; i < indiceAtual; i++) {
             if (novoCodigoProduto == codigos[i]) {
-                System.out.println("Não é possível cadastrar. O código do produto já está cadastrado.");
-                return false;
+                throw new IllegalArgumentException("Código do produto já está em uso.");
             }
         }
-
-        return true;
     }
 
-    private static boolean validarNomeProduto(String nomeProduto) {
-        return switch (nomeProduto) {
-            case String s when s.isBlank() -> {
-                System.out.println("Não é possível cadastrar. O nome está vazio!");
-                yield false;
-            }
-            default -> true;
-        };
+    private static void validarCodigoProduto(int codigoProduto) {
+        if (codigoProduto < 1) {
+            throw new IllegalArgumentException("Código do produto deve ser maior que zero.");
+        }
     }
 
-    private static boolean validarPreco(double precoProduto) {
+    private static void validarNomeProduto(String nomeProduto) {
+        if (nomeProduto.isBlank()) {
+            throw new IllegalArgumentException("Nome está vazio.");
+        }
+    }
+
+    private static void validarPreco(double precoProduto) {
         if (precoProduto <= 0) {
-            System.out.println("Não é possível cadastrar. O preço do produto deve ser maior que zero.");
-            return false;
+            throw new IllegalArgumentException("Preço do produto deve ser maior que zero.");
         }
-
-        return true;
     }
 
-    private static boolean validarQuantidade(int quantidadeProduto) {
-
+    private static void validarQuantidade(int quantidadeProduto) {
         if (quantidadeProduto < 0) {
-            System.out.println("Não é possível cadastrar. A quantidade inicial não pode ser negativa.");
-            return false;
+            throw new IllegalArgumentException("Quantidade inicial não pode ser negativa.");
         }
-
-        return true;
     }
 
-    private static void inserirProdutoEstoque(int codigo, String nome, double preco, int quantidade) {
+    private static void inserirProduto(int codigo, String nome, double preco, int quantidade) {
         codigos[indiceAtual] = codigo;
         nomes[indiceAtual] = nome;
         precos[indiceAtual] = preco;
