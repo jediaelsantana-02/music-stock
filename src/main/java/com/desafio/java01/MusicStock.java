@@ -1,9 +1,11 @@
 package com.desafio.java01;
 
-import java.util.Objects;
+import com.desafio.java01.exception.LimiteTentativasException;
+
 import java.util.Scanner;
 
 public class MusicStock {
+    private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 5;
     private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -21,40 +23,21 @@ public class MusicStock {
             opcao = menuPrincipal().toUpperCase().trim();
 
             switch (opcao) {
-                case String s when s.equals("1") || s.contains("CADASTRAR") -> {
-                    System.out.println("-> Executando: Cadastrar instrumento");
-                    cadastrarInstrumento();
-                }
-                case String s when s.equals("2") || s.contains("LISTAR") -> {
-                    System.out.println("-> Executando: Listar instrumentos");
-                }
-                case String s when s.equals("3") || s.contains("BUSCAR") -> {
-                    System.out.println("-> Executando: Buscar instrumento");
-                }
-                case String s when s.equals("4") || s.contains("VENDA") -> {
-                    System.out.println("-> Executando: Realizar venda");
-                }
-                case String s when s.equals("5") || s.contains("REPOR") || s.contains("ESTOQUE") && !s.contains("RELATÓRIO") -> {
-                    System.out.println("-> Executando: Repor estoque");
-                }
-                case String s when s.equals("6") || s.contains("RELATÓRIO") || s.contains("RELATORIO") -> {
-                    System.out.println("-> Executando: Relatório do estoque");
-                }
-                case String s when s.equals("7") || s.contains("MOVIMENTAÇÕES") -> {
-                    System.out.println("-> Executando: MOVIMENTAÇÕES");
-                }
-                case String s when s.equals("0") || s.contains("SAIR") -> {
+                case "1" -> cadastrarInstrumento();
+                case "2" -> System.out.println("-> Executando: Listar instrumentos");
+                case "3" -> System.out.println("-> Executando: Buscar instrumento");
+                case "4" -> System.out.println("-> Executando: Realizar venda");
+                case "5" -> System.out.println("-> Executando: Repor estoque");
+                case "6" -> System.out.println("-> Executando: Relatório do estoque");
+                case "7" -> System.out.println("-> Executando: MOVIMENTAÇÕES");
+                case "0" -> {
                     System.out.println("-> Saindo do sistema...");
                     scanner.close();
-                    System.exit(0);
+                    return;
                 }
-                case null -> {
-                    System.out.println("Entrada inválida (nula)!");
-                }
-                default -> {
-                    System.out.println("Opção incorreta! Tente novamente.");
-                }
+                default -> System.out.println("Opção incorreta! Tente novamente.");
             }
+
         } while (true);
     }
 
@@ -87,33 +70,126 @@ public class MusicStock {
         System.out.println("Informe os dados do produto:");
 
         try {
-            verificarCapacidadeMaximaProduto();
-
-            System.out.println("Código do produto:");
-            int codigo = Integer.parseInt(scanner.nextLine());
-            validarCodigoProduto(codigo);
-            verificarCodigoProdutoDuplicado(codigo);
-
-            System.out.println("Nome do produto:");
-            String nome = scanner.nextLine().trim();
-            validarNomeProduto(nome);
-
-            System.out.println("Preço do produto:");
-            double preco = Double.parseDouble(scanner.nextLine());
-            validarPreco(preco);
-
-            System.out.println("Quantidade inicial em estoque:");
-            int quantidade = Integer.parseInt(scanner.nextLine());
-            validarQuantidade(quantidade);
+            int codigo = obterCodigo();
+            String nome = obterNome();
+            double preco = obterPreco();
+            int quantidade = obterQuantidade();
 
             inserirProduto(codigo, nome, preco, quantidade);
 
-        } catch (NumberFormatException ex) {
-            System.out.println("❌ Entrada inválida. Insira apenas números.");
-        } catch (IllegalArgumentException ex) {
-            System.err.println("Não é possível cadastrar o produto. " + ex.getMessage());
+            System.out.println("✅ Produto cadastrado com sucesso!");
+
+        } catch (LimiteTentativasException ex) {
+            System.out.println("❌ Cadastro cancelado: " + ex.getMessage());
         }
 
+    }
+
+    private static int obterCodigo() {
+        int interacao = 0;
+
+        while (true) {
+
+            validarLimiteTentativas(interacao);
+
+            try {
+                System.out.println("Código do produto:");
+
+                int codigo = Integer.parseInt(scanner.nextLine());
+                validarCodigoProduto(codigo);
+                verificarCodigoProdutoDuplicado(codigo);
+
+                return codigo;
+            } catch (NumberFormatException ex) {
+                System.out.println("❌ Entrada inválida. Insira apenas números.");
+                interacao++;
+            } catch (IllegalArgumentException ex) {
+                System.err.println("❌ " + ex.getMessage() + " Tentando novamente.");
+                interacao++;
+            }
+        }
+    }
+
+    private static String obterNome() {
+        int interacao = 0;
+
+        while (true) {
+
+            validarLimiteTentativas(interacao);
+
+            try {
+                System.out.println("Nome do produto:");
+                String nomeProduto = scanner.nextLine().trim();
+                validarNomeProduto(nomeProduto);
+
+                return nomeProduto;
+
+            } catch (IllegalArgumentException ex) {
+                System.err.println("❌ " + ex.getMessage() + "Tentendo novamente");
+                interacao++;
+            }
+        }
+    }
+
+    private static double obterPreco() {
+        int interacao = 0;
+
+        while (true) {
+
+            validarLimiteTentativas(interacao);
+
+            try {
+                System.out.println("Preço do produto:");
+                double preco = Double.parseDouble(scanner.nextLine());
+                validarPreco(preco);
+
+                return preco;
+
+            } catch (NumberFormatException ex) {
+                System.out.println("❌ Entrada inválida. Insira apenas números.");
+                interacao++;
+            } catch (IllegalArgumentException ex) {
+                System.err.println("❌ " + ex.getMessage() + "Tentando novamente.");
+                interacao++;
+            }
+        }
+    }
+
+    private static int obterQuantidade() {
+        int interacao = 0;
+
+        while (true) {
+
+            validarLimiteTentativas(interacao);
+
+            try {
+                System.out.println("Quantidade inicial em estoque:");
+
+                int quantidade = Integer.parseInt(scanner.nextLine());
+                validarQuantidade(quantidade);
+
+                return quantidade;
+
+            } catch (NumberFormatException ex) {
+                System.out.println("❌ Entrada inválida. Insira apenas números.");
+                interacao++;
+
+            } catch (IllegalArgumentException ex) {
+                System.err.println("❌ " + ex.getMessage() + "Tentendo novamente");
+                interacao++;
+
+            }
+        }
+    }
+
+    private static void inserirProduto(int codigo, String nome, double preco, int quantidade) {
+        verificarCapacidadeMaximaProduto();
+
+        codigos[indiceAtual] = codigo;
+        nomes[indiceAtual] = nome;
+        precos[indiceAtual] = preco;
+        quantidades[indiceAtual] = quantidade;
+        indiceAtual++;
     }
 
     private static void verificarCapacidadeMaximaProduto() {
@@ -154,11 +230,9 @@ public class MusicStock {
         }
     }
 
-    private static void inserirProduto(int codigo, String nome, double preco, int quantidade) {
-        codigos[indiceAtual] = codigo;
-        nomes[indiceAtual] = nome;
-        precos[indiceAtual] = preco;
-        quantidades[indiceAtual] = quantidade;
-        indiceAtual++;
+    private static void validarLimiteTentativas(int interacao) {
+        if (interacao >= MAXIMA_REPETICAO_CADASTRO_CAMPO) {
+            throw new LimiteTentativasException();
+        }
     }
 }
