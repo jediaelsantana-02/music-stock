@@ -16,15 +16,25 @@ public class MusicStock {
     private static int indiceAtual = 0;
 
 
+    private static void dbMusicStockInicial() {
+        inserirProduto(1, "Bateria Odery", 5000.00, 9);
+        inserirProduto(2, "Bateria Yamaha", 10000.00, 2);
+        inserirProduto(3, "Teclado roland xps10", 4500, 12);
+        inserirProduto(4, "Guitarra", 500.00, 7);
+        inserirProduto(5, "Contrabaixo", 1600.00, 4);
+    }
+
     public static void main(String[] args) {
         String opcao;
+
+        dbMusicStockInicial();
 
         do {
             opcao = menuPrincipal().toUpperCase().trim();
 
             switch (opcao) {
-                case "1" -> cadastrarInstrumento();
-                case "2" -> System.out.println("-> Executando: Listar instrumentos");
+                case "1" -> cadastrarProtuto();
+                case "2" -> listarProdutos();
                 case "3" -> System.out.println("-> Executando: Buscar instrumento");
                 case "4" -> System.out.println("-> Executando: Realizar venda");
                 case "5" -> System.out.println("-> Executando: Repor estoque");
@@ -65,7 +75,7 @@ public class MusicStock {
         return scanner.nextLine();
     }
 
-    public static void cadastrarInstrumento() {
+    public static void cadastrarProtuto() {
         System.out.println("=== Cadastro de Instrumento Musical ===");
         System.out.println("Informe os dados do produto:");
 
@@ -83,6 +93,21 @@ public class MusicStock {
             System.out.println("❌ Cadastro cancelado: " + ex.getMessage());
         }
 
+    }
+
+    private static void listarProdutos() {
+        String formatoCabecalho = "| %-6s | %-25s | %-10s | %-10s |%n";
+        String formatoDados = "| %-6d | %-25s | %-10.2f | %-10d |%n";
+
+        System.out.println("+--------+---------------------------+------------+------------+");
+        System.out.printf(formatoCabecalho, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
+        System.out.println("+--------+---------------------------+------------+------------+");
+
+        for (int i = 0; i < indiceAtual; i++) {
+            System.out.printf(formatoDados, codigos[i], nomes[i], precos[i], quantidades[i]);
+        }
+
+        System.out.println("+--------+---------------------------+------------+------------+");
     }
 
     private static int obterCodigo() {
@@ -235,4 +260,5 @@ public class MusicStock {
             throw new LimiteTentativasException();
         }
     }
+
 }
