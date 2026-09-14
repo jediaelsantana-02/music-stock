@@ -1,19 +1,27 @@
 package com.desafio.java01;
 
+import com.desafio.java01.exception.LimiteMovimentacoes;
 import com.desafio.java01.exception.LimiteTentativasException;
+import com.desafio.java01.exception.ProdutoNaoEncontradoException;
+import com.desafio.java01.exception.QuantidadeIndisponivelException;
 
 import java.util.Scanner;
 
 public class MusicStock {
     private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 5;
     private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
+    private static final int QUANTIDADE_MAXIMA_MOVIMENTACAO = 100;
+    private static final String FORMATO_CABECALHO = "| %-6s | %-25s | %-10s | %-10s |%n";
+    private static final String FORMATO_DADOS = "| %-6d | %-25s | %-10.2f | %-10d |%n";
     private static final Scanner scanner = new Scanner(System.in);
 
-    private static int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static String[] nomes = new String[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static double[] precos = new double[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static int[] quantidades = new int[CAPACIDADE_MAXIMA_PRODUTOS];
-    private static int indiceAtual = 0;
+    private static final int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static final String[] nomes = new String[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static final double[] precos = new double[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static final int[] quantidades = new int[CAPACIDADE_MAXIMA_PRODUTOS];
+    private static final String[][] movimentacoesValores = new String[CAPACIDADE_MAXIMA_PRODUTOS][QUANTIDADE_MAXIMA_MOVIMENTACAO];
+
+    private static int indiceAtualProduto = 0;
 
 
     private static void dbMusicStockInicial() {
@@ -35,8 +43,8 @@ public class MusicStock {
             switch (opcao) {
                 case "1" -> cadastrarProtuto();
                 case "2" -> listarProdutos();
-                case "3" -> System.out.println("-> Executando: Buscar instrumento");
-                case "4" -> System.out.println("-> Executando: Realizar venda");
+                case "3" -> buscarProduto();
+                case "4" -> realizarVenda();
                 case "5" -> System.out.println("-> Executando: Repor estoque");
                 case "6" -> System.out.println("-> Executando: Relatório do estoque");
                 case "7" -> System.out.println("-> Executando: MOVIMENTAÇÕES");
@@ -51,7 +59,9 @@ public class MusicStock {
         } while (true);
     }
 
-    public static String menuPrincipal() {
+    // ----------------------------------------- EXIBICAO -----------------------------------------
+
+    private static String menuPrincipal() {
         String[] menu = new String[8];
         menu[1] = "Cadastrar instrumento";
         menu[2] = "Listar instrumentos";
@@ -75,7 +85,7 @@ public class MusicStock {
         return scanner.nextLine();
     }
 
-    public static void cadastrarProtuto() {
+    private static void cadastrarProtuto() {
         System.out.println("=== Cadastro de Instrumento Musical ===");
         System.out.println("Informe os dados do produto:");
 
@@ -96,26 +106,102 @@ public class MusicStock {
     }
 
     private static void listarProdutos() {
-        String formatoCabecalho = "| %-6s | %-25s | %-10s | %-10s |%n";
-        String formatoDados = "| %-6d | %-25s | %-10.2f | %-10d |%n";
 
         System.out.println("+--------+---------------------------+------------+------------+");
-        System.out.printf(formatoCabecalho, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
+        System.out.printf(FORMATO_CABECALHO, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
         System.out.println("+--------+---------------------------+------------+------------+");
 
-        for (int i = 0; i < indiceAtual; i++) {
-            System.out.printf(formatoDados, codigos[i], nomes[i], precos[i], quantidades[i]);
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            System.out.printf(FORMATO_DADOS, codigos[i], nomes[i], precos[i], quantidades[i]);
         }
 
         System.out.println("+--------+---------------------------+------------+------------+");
     }
 
+    private static void buscarProduto() {
+
+        try {
+            System.out.println("Código do produto:");
+
+            int codigo = Integer.parseInt(scanner.nextLine());
+            validarCodigoProduto(codigo);
+
+            int indice = buscarProdutoPorCodigo(codigo);
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+            System.out.printf(FORMATO_CABECALHO, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+            System.out.printf(FORMATO_DADOS, codigos[indice], nomes[indice], precos[indice], quantidades[indice]);
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+        } catch (ProdutoNaoEncontradoException ex) {
+            System.out.println(ex.getMessage());
+        }
+
+    }
+
+    private static void realizarVenda() {
+
+        try {
+            System.out.println("Código do produto:");
+
+            int codigo = Integer.parseInt(scanner.nextLine());
+            validarCodigoProduto(codigo);
+
+            int indice = buscarProdutoPorCodigo(codigo);
+            int quantidade = obterQuantidadeVenda();
+
+            if (quantidade > quantidades[indice]) {
+                throw new QuantidadeIndisponivelException("Quantidade maior que a disponível.");
+            }
+
+            double valorTotal = quantidade * precos[indice];
+
+            efetivarVenda(indice, quantidade);
+
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+            System.out.printf(FORMATO_CABECALHO, "CÓDIGO", "NOME", "VALOR TOTAL", "QUANTIDADE");
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+            System.out.printf(FORMATO_DADOS, codigos[indice], nomes[indice], valorTotal, quantidade);
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+            System.out.println("✅ Venda realizada com sucesso!");
+
+        } catch (ProdutoNaoEncontradoException ex) {
+            System.out.println(ex.getMessage());
+        } catch (QuantidadeIndisponivelException ex) {
+            System.out.println("Estoque insuficiente. " + ex.getMessage());
+        } catch (NumberFormatException ex) {
+            System.out.println("Informação inválida.");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Venda não realizada. " + ex.getMessage());
+        }
+    }
+
+    // ----------------------------------------- IMPLEMENTACAO        -----------------------------------------
+
+    private static int buscarProdutoPorCodigo(int codigo) {
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            if (codigo == codigos[i]) {
+                return i;
+            }
+        }
+
+        throw new ProdutoNaoEncontradoException("Produto não cadastrado.");
+    }
+
     private static int obterCodigo() {
-        int interacao = 0;
+        int tentativas = 0;
 
         while (true) {
 
-            validarLimiteTentativas(interacao);
+            validarLimiteTentativas(tentativas);
 
             try {
                 System.out.println("Código do produto:");
@@ -127,10 +213,10 @@ public class MusicStock {
                 return codigo;
             } catch (NumberFormatException ex) {
                 System.out.println("❌ Entrada inválida. Insira apenas números.");
-                interacao++;
+                tentativas++;
             } catch (IllegalArgumentException ex) {
                 System.err.println("❌ " + ex.getMessage() + " Tentando novamente.");
-                interacao++;
+                tentativas++;
             }
         }
     }
@@ -150,7 +236,7 @@ public class MusicStock {
                 return nomeProduto;
 
             } catch (IllegalArgumentException ex) {
-                System.err.println("❌ " + ex.getMessage() + "Tentendo novamente");
+                System.err.println("❌ " + ex.getMessage() + "Tentando novamente");
                 interacao++;
             }
         }
@@ -200,31 +286,41 @@ public class MusicStock {
                 interacao++;
 
             } catch (IllegalArgumentException ex) {
-                System.err.println("❌ " + ex.getMessage() + "Tentendo novamente");
+                System.err.println("❌ " + ex.getMessage() + "Tentando novamente");
                 interacao++;
 
             }
         }
     }
 
+    private static int obterQuantidadeVenda() {
+        System.out.println("Quantidade:");
+
+        int quantidade = Integer.parseInt(scanner.nextLine());
+        validarQuantidadeVenda(quantidade);
+
+        return quantidade;
+    }
+
     private static void inserirProduto(int codigo, String nome, double preco, int quantidade) {
         verificarCapacidadeMaximaProduto();
 
-        codigos[indiceAtual] = codigo;
-        nomes[indiceAtual] = nome;
-        precos[indiceAtual] = preco;
-        quantidades[indiceAtual] = quantidade;
-        indiceAtual++;
+        codigos[indiceAtualProduto] = codigo;
+        nomes[indiceAtualProduto] = nome;
+        precos[indiceAtualProduto] = preco;
+        quantidades[indiceAtualProduto] = quantidade;
+
+        indiceAtualProduto++;
     }
 
     private static void verificarCapacidadeMaximaProduto() {
-        if (indiceAtual >= CAPACIDADE_MAXIMA_PRODUTOS) {
+        if (indiceAtualProduto >= CAPACIDADE_MAXIMA_PRODUTOS) {
             throw new IllegalArgumentException("Capacidade máxima de produtos foi atingida.");
         }
     }
 
     private static void verificarCodigoProdutoDuplicado(int novoCodigoProduto) {
-        for (int i = 0; i < indiceAtual; i++) {
+        for (int i = 0; i < indiceAtualProduto; i++) {
             if (novoCodigoProduto == codigos[i]) {
                 throw new IllegalArgumentException("Código do produto já está em uso.");
             }
@@ -255,10 +351,39 @@ public class MusicStock {
         }
     }
 
+    private static void validarQuantidadeVenda(int quantidadeProduto) {
+        if (quantidadeProduto <= 0) {
+            throw new IllegalArgumentException("A quantidade vendida precisa ser maior que zero.");
+        }
+    }
+
     private static void validarLimiteTentativas(int interacao) {
         if (interacao >= MAXIMA_REPETICAO_CADASTRO_CAMPO) {
             throw new LimiteTentativasException();
         }
     }
+
+    private static void efetivarVenda(int indice, int quantidade) {
+        quantidades[indice] -= quantidade;
+        registrarMovimentacao(indice, "-" + quantidade);
+    }
+
+    // -------------------------------------- Movimentacao ------------------------------
+    private static void registrarMovimentacao(int indiceProduto, String movimentacao) {
+
+        for (int i = 0; i < movimentacoesValores[indiceProduto].length; i++) {
+            if (movimentacoesValores[indiceProduto][i] == null
+                    || movimentacoesValores[indiceProduto][i].isBlank()) {
+                movimentacoesValores[indiceProduto][i] = movimentacao;
+                break;
+            } else if (i == movimentacoesValores[indiceProduto].length -1) {
+                throw new LimiteMovimentacoes("Não é possível cadastrar novas movimentações.");
+            }
+        }
+
+    }
+
+// -------------------------------- Ultils --------------------------
+
 
 }
