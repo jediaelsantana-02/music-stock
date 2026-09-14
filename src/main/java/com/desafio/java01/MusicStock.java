@@ -47,7 +47,7 @@ public class MusicStock {
                 case "4" -> realizarVenda();
                 case "5" -> System.out.println("-> Executando: Repor estoque");
                 case "6" -> System.out.println("-> Executando: Relatório do estoque");
-                case "7" -> System.out.println("-> Executando: MOVIMENTAÇÕES");
+                case "7" -> consultarMovimentacao();
                 case "0" -> {
                     System.out.println("-> Saindo do sistema...");
                     scanner.close();
@@ -181,6 +181,40 @@ public class MusicStock {
         } catch (IllegalArgumentException ex) {
             System.out.println("Venda não realizada. " + ex.getMessage());
         }
+    }
+
+    private static void consultarMovimentacao() {
+
+        try {
+            System.out.println("Código do produto:");
+
+            int codigo = Integer.parseInt(scanner.nextLine());
+            validarCodigoProduto(codigo);
+
+            int indice = buscarProdutoPorCodigo(codigo);
+
+            System.out.println("+----------------+");
+            System.out.printf("| %-14s |%n", "MOVIMENTAÇÕES");
+            System.out.println("+----------------+");
+
+            for (String movimentacao : movimentacoesValores[indice]) {
+
+                if (movimentacao != null) {
+                    System.out.printf("| %-14s |%n", movimentacao);
+                }
+
+            }
+
+            System.out.println("+----------------+");
+
+        } catch (ProdutoNaoEncontradoException ex) {
+            System.out.println(ex.getMessage());
+        } catch (NumberFormatException ex) {
+            System.out.println("Informação inválida.");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Consulta não realizada. " + ex.getMessage());
+        }
+
     }
 
     // ----------------------------------------- IMPLEMENTACAO        -----------------------------------------
@@ -364,8 +398,8 @@ public class MusicStock {
     }
 
     private static void efetivarVenda(int indice, int quantidade) {
-        quantidades[indice] -= quantidade;
         registrarMovimentacao(indice, "-" + quantidade);
+        quantidades[indice] -= quantidade;
     }
 
     // -------------------------------------- Movimentacao ------------------------------
@@ -376,7 +410,7 @@ public class MusicStock {
                     || movimentacoesValores[indiceProduto][i].isBlank()) {
                 movimentacoesValores[indiceProduto][i] = movimentacao;
                 break;
-            } else if (i == movimentacoesValores[indiceProduto].length -1) {
+            } else if (i == movimentacoesValores[indiceProduto].length - 1) {
                 throw new LimiteMovimentacoes("Não é possível cadastrar novas movimentações.");
             }
         }
