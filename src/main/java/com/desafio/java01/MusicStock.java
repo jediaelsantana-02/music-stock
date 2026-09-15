@@ -6,6 +6,7 @@ import com.desafio.java01.exception.ProdutoNaoEncontradoException;
 import com.desafio.java01.exception.QuantidadeIndisponivelException;
 
 import java.util.Scanner;
+import java.util.TreeMap;
 
 public class MusicStock {
     private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 5;
@@ -45,8 +46,8 @@ public class MusicStock {
                 case "2" -> listarProdutos();
                 case "3" -> buscarProduto();
                 case "4" -> realizarVenda();
-                case "5" -> System.out.println("-> Executando: Repor estoque");
-                case "6" -> System.out.println("-> Executando: Relatório do estoque");
+                case "5" -> reporEstoque();
+                case "6" -> relatorioEstoque();
                 case "7" -> consultarMovimentacao();
                 case "0" -> {
                     System.out.println("-> Saindo do sistema...");
@@ -93,7 +94,7 @@ public class MusicStock {
             int codigo = obterCodigo();
             String nome = obterNome();
             double preco = obterPreco();
-            int quantidade = obterQuantidade();
+            int quantidade = obterQuantidadeCadastro();
 
             inserirProduto(codigo, nome, preco, quantidade);
 
@@ -151,7 +152,7 @@ public class MusicStock {
             validarCodigoProduto(codigo);
 
             int indice = buscarProdutoPorCodigo(codigo);
-            int quantidade = obterQuantidadeVenda();
+            int quantidade = obterQuantidade();
 
             if (quantidade > quantidades[indice]) {
                 throw new QuantidadeIndisponivelException("Quantidade maior que a disponível.");
@@ -180,6 +181,30 @@ public class MusicStock {
             System.out.println("Informação inválida.");
         } catch (IllegalArgumentException ex) {
             System.out.println("Venda não realizada. " + ex.getMessage());
+        }
+    }
+
+    private static void reporEstoque() {
+
+        try {
+            System.out.println("Código do produto:");
+
+            int codigo = Integer.parseInt(scanner.nextLine());
+            validarCodigoProduto(codigo);
+
+            int indice = buscarProdutoPorCodigo(codigo);
+            int quantidade = obterQuantidade();
+
+            reporQuantidadeProduto(indice, quantidade);
+
+            System.out.println("✅ Estoque atualizado com sucesso!");
+
+        } catch (ProdutoNaoEncontradoException ex) {
+            System.out.println(ex.getMessage());
+        } catch (NumberFormatException ex) {
+            System.out.println("Informação inválida.");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Estoque não adicionado. " + ex.getMessage());
         }
     }
 
@@ -217,6 +242,37 @@ public class MusicStock {
 
     }
 
+    private static void relatorioEstoque() {
+        String linha = "+------+----------+-------------------------+------------+------------+------------------+";
+        String cabecalho = "| %-4s | %-8s | %-23s | %-10s | %-10s | %-16s |%n";
+        String formatoDados = "| %4d | %-8s | %-23s | %10.2f | %10d | %16.2f |%n";
+
+        System.out.println("==== Resumo Geral ====");
+        System.out.println("Quantidade de produtos cadastrados\t\t: " + indiceAtualProduto);
+        System.out.println("Total de itens em estoque\t\t\t\t: " + getTotalItensEstoque());
+        System.out.println("Valor total do estoque\t\t\t\t\t: " + getValorTotalEstoque());
+        System.out.println("Produto de maior preço\t\t\t\t\t: " + getProdutoMaiorPreco());
+        System.out.println("Produto de menor preço\t\t\t\t\t: " + getProdutoMenorPreco());
+        System.out.println("Produto com menor quantidade disponível : " + getMenorQuantidade());
+
+        System.out.println("==== Detalhamento dos Produtos ====");
+
+        System.out.println(linha);
+
+        System.out.printf(cabecalho, "Nº", "Código", "Nome", "Preço (R$)", "Quantidade", "Valor Total (R$)");
+
+        System.out.println(linha);
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+
+            double valorTotal = precos[i] * quantidades[i];
+
+            System.out.printf(formatoDados, i + 1, codigos[i], nomes[i], precos[i], quantidades[i], valorTotal);
+        }
+
+        System.out.println(linha);
+
+    }
     // ----------------------------------------- IMPLEMENTACAO        -----------------------------------------
 
     private static int buscarProdutoPorCodigo(int codigo) {
@@ -300,7 +356,7 @@ public class MusicStock {
         }
     }
 
-    private static int obterQuantidade() {
+    private static int obterQuantidadeCadastro() {
         int interacao = 0;
 
         while (true) {
@@ -327,11 +383,11 @@ public class MusicStock {
         }
     }
 
-    private static int obterQuantidadeVenda() {
+    private static int obterQuantidade() {
         System.out.println("Quantidade:");
 
         int quantidade = Integer.parseInt(scanner.nextLine());
-        validarQuantidadeVenda(quantidade);
+        validarQuantidadeMaiorQueZero(quantidade);
 
         return quantidade;
     }
@@ -385,9 +441,9 @@ public class MusicStock {
         }
     }
 
-    private static void validarQuantidadeVenda(int quantidadeProduto) {
+    private static void validarQuantidadeMaiorQueZero(int quantidadeProduto) {
         if (quantidadeProduto <= 0) {
-            throw new IllegalArgumentException("A quantidade vendida precisa ser maior que zero.");
+            throw new IllegalArgumentException("A quantidade precisa ser maior que zero.");
         }
     }
 
@@ -400,6 +456,11 @@ public class MusicStock {
     private static void efetivarVenda(int indice, int quantidade) {
         registrarMovimentacao(indice, "-" + quantidade);
         quantidades[indice] -= quantidade;
+    }
+
+    private static void reporQuantidadeProduto(int indice, int quantidade) {
+        registrarMovimentacao(indice, "+" + quantidade);
+        quantidades[indice] += quantidade;
     }
 
     // -------------------------------------- Movimentacao ------------------------------
@@ -415,6 +476,62 @@ public class MusicStock {
             }
         }
 
+    }
+
+    private static int getTotalItensEstoque() {
+        int totalItens = 0;
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            totalItens += quantidades[i];
+        }
+
+        return totalItens;
+    }
+
+    private static String getValorTotalEstoque() {
+        double valorTotal = 0;
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            valorTotal += (quantidades[i] * precos[i]);
+        }
+
+        return "R$ " + valorTotal;
+    }
+
+    private static String getProdutoMaiorPreco() {
+        int indiceMaior = 0;
+
+        for (int i = 1; i < indiceAtualProduto; i++) {
+            if (precos[i] > precos[indiceMaior]) {
+                indiceMaior = i;
+            }
+        }
+
+        return nomes[indiceMaior] + " (R$ " + precos[indiceMaior] + ")";
+    }
+
+    private static String getProdutoMenorPreco() {
+        int indiceMenor = 0;
+
+        for (int i = 1; i < indiceAtualProduto; i++) {
+            if (precos[i] < precos[indiceMenor]) {
+                indiceMenor = i;
+            }
+        }
+
+        return nomes[indiceMenor] + " (R$ " + precos[indiceMenor] + ")";
+    }
+
+    private static String getMenorQuantidade() {
+        int indiceMenorQuantidade = 0;
+
+        for (int i = 1; i < indiceAtualProduto; i++) {
+            if (quantidades[i] < quantidades[indiceMenorQuantidade]) {
+                indiceMenorQuantidade = i;
+            }
+        }
+
+        return nomes[indiceMenorQuantidade] + " (" + quantidades[indiceMenorQuantidade] + " unidades)";
     }
 
 // -------------------------------- Ultils --------------------------
