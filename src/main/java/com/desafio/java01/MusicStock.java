@@ -6,7 +6,6 @@ import com.desafio.java01.exception.ProdutoNaoEncontradoException;
 import com.desafio.java01.exception.QuantidadeIndisponivelException;
 
 import java.util.Scanner;
-import java.util.TreeMap;
 
 public class MusicStock {
     private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 5;
