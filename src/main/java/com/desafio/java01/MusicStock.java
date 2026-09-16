@@ -1,18 +1,34 @@
 package com.desafio.java01;
 
-import com.desafio.java01.exception.LimiteMovimentacoes;
-import com.desafio.java01.exception.LimiteTentativasException;
-import com.desafio.java01.exception.ProdutoNaoEncontradoException;
-import com.desafio.java01.exception.QuantidadeIndisponivelException;
+import com.desafio.java01.exception.*;
 
 import java.util.Scanner;
 
 public class MusicStock {
-    private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 5;
+
+    // ==============================
+    // CONSTANTES
+    // ==============================
+    private static final int MAXIMA_REPETICAO_CADASTRO_CAMPO = 3;
     private static final int CAPACIDADE_MAXIMA_PRODUTOS = 100;
     private static final int QUANTIDADE_MAXIMA_MOVIMENTACAO = 100;
     private static final String FORMATO_CABECALHO = "| %-6s | %-25s | %-10s | %-10s |%n";
-    private static final String FORMATO_DADOS = "| %-6d | %-25s | %-10.2f | %-10d |%n";
+    private static final String FORMATO_DADOS = "| %-6d | %-25s | %10.2f | %10d |%n";
+    private static final String[] MENU_PRINCIPAL = {
+            "Sair",
+            "Cadastrar instrumento",
+            "Listar instrumentos",
+            "Buscar instrumento",
+            "Realizar venda",
+            "Repor estoque",
+            "Relatório do estoque",
+            "Movimentações"
+    };
+
+
+    // ==============================
+    // DADOS DO SISTEMA
+    // ==============================
     private static final Scanner scanner = new Scanner(System.in);
 
     private static final int[] codigos = new int[CAPACIDADE_MAXIMA_PRODUTOS];
@@ -24,7 +40,7 @@ public class MusicStock {
     private static int indiceAtualProduto = 0;
 
 
-    private static void dbMusicStockInicial() {
+    private static void carregarDadosIniciais() {
         inserirProduto(1, "Bateria Odery", 5000.00, 9);
         inserirProduto(2, "Bateria Yamaha", 10000.00, 2);
         inserirProduto(3, "Teclado roland xps10", 4500, 12);
@@ -33,64 +49,188 @@ public class MusicStock {
     }
 
     public static void main(String[] args) {
-        String opcao;
 
-        dbMusicStockInicial();
+        carregarDadosIniciais();
+        menuInicial();
+    }
+
+
+    // ==============================
+    // MENU DO SISTEMA
+    // ==============================
+    public static void menuInicial() {
+        int opcao;
 
         do {
-            opcao = menuPrincipal().toUpperCase().trim();
+            opcao = menuPrincipal();
 
             switch (opcao) {
-                case "1" -> cadastrarProtuto();
-                case "2" -> listarProdutos();
-                case "3" -> buscarProduto();
-                case "4" -> realizarVenda();
-                case "5" -> reporEstoque();
-                case "6" -> relatorioEstoque();
-                case "7" -> consultarMovimentacao();
-                case "0" -> {
-                    System.out.println("-> Saindo do sistema...");
-                    scanner.close();
-                    return;
-                }
-                default -> System.out.println("Opção incorreta! Tente novamente.");
+                case 1 -> cadastrarProduto();
+                case 2 -> listarProdutos();
+                case 3 -> buscarProduto();
+                case 4 -> realizarVenda();
+                case 5 -> reporEstoque();
+                case 6 -> relatorioEstoque();
+                case 7 -> consultarMovimentacao();
+                case 0 -> System.out.println("⏻ Encerrando sistema...");
+                default -> System.out.println("❌ Opção incorreta! Tente novamente.");
             }
 
-        } while (true);
+        } while (opcao > 0);
+
+        scanner.close();
     }
 
-    // ----------------------------------------- EXIBICAO -----------------------------------------
-
-    private static String menuPrincipal() {
-        String[] menu = new String[8];
-        menu[1] = "Cadastrar instrumento";
-        menu[2] = "Listar instrumentos";
-        menu[3] = "Buscar instrumento";
-        menu[4] = "Realizar venda";
-        menu[5] = "Repor estoque";
-        menu[6] = "Relatório do estoque";
-        menu[7] = "Movimentações";
-        menu[0] = "Sair";
+    private static int menuPrincipal() {
 
         System.out.println("--------------------------------------------------------------");
+        System.out.println("OPÇÃO    DESCRIÇÃO");
 
-        System.out.println("OPÇÃO    DESCRIÇÃO ");
-        for (int i = 1; i <= menu.length; i++) {
-            int indice = i % menu.length;
-            System.out.println("(" + indice + ")" + " — " + menu[indice]);
+        for (int i = 1; i < MENU_PRINCIPAL.length; i++) {
+            System.out.printf("(%d) — %s%n", i, MENU_PRINCIPAL[i]);
         }
+
+        System.out.printf("(0) - %s%n", MENU_PRINCIPAL[0]);
         System.out.println("--------------------------------------------------------------");
 
-        System.out.println("Digite uma das opções do MENU");
-        return scanner.nextLine();
+        return obterOpcaoMenuInicial();
     }
 
-    private static void cadastrarProtuto() {
+    // ==============================
+    // FUNCIONALIDADES
+    // ==============================
+    private static void listarProdutos() {
+
+        System.out.println("+--------+---------------------------+------------+------------+");
+        System.out.printf(FORMATO_CABECALHO, "Código", "Nome", "Preço (R$)", "Quantidade");
+        System.out.println("+--------+---------------------------+------------+------------+");
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            System.out.printf(FORMATO_DADOS, codigos[i], nomes[i], precos[i], quantidades[i]);
+        }
+
+        System.out.println("+--------+---------------------------+------------+------------+");
+    }
+
+    private static void buscarProduto() {
+
+        try {
+            int codigo = obterCodigoParaBusca();
+            int indice = buscarIndiceProdutoPorCodigo(codigo);
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+            System.out.printf(FORMATO_CABECALHO, "Código", "Nome", "Preço (R$)", "Quantidade");
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+            System.out.printf(FORMATO_DADOS, codigos[indice], nomes[indice], precos[indice], quantidades[indice]);
+
+            System.out.println("+--------+---------------------------+------------+------------+");
+
+        } catch (ProdutoNaoEncontradoException ex) {
+            System.out.println("\uD83D\uDD0D " + ex.getMessage());
+        } catch (LimiteTentativasException ex) {
+            System.out.println("❌ " + ex.getMessage());
+        }
+
+    }
+
+
+    // ==============================
+    // ENTRADA DE DADOS
+    // ==============================
+    private static int obterOpcaoMenuInicial() {
+        while (true) {
+            try {
+                System.out.println("Escolha uma das operação");
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Opção incorreta. Digite apenas números.");
+            }
+        }
+    }
+
+    private static int obterCodigo(boolean isCadastrar) {
+        int tentativas = 0;
+
+        while (true) {
+
+            try {
+                validarLimiteTentativas(tentativas);
+
+                System.out.println("Código do produto:");
+                int codigo = Integer.parseInt(scanner.nextLine());
+
+                validarCodigoMaiorQueZero(codigo);
+
+                if (isCadastrar) {
+                    validarCodigoDuplicado(codigo);
+                }
+
+                return codigo;
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Entrada inválida. Digite apenas números.");
+                tentativas++;
+            } catch (CodigoProdutoInvalidoException e) {
+                System.out.println("❌ " + e.getMessage());
+                tentativas++;
+            } catch (CodigoDuplicadoException e) {
+                System.out.println(e.getMessage());
+            } catch (LimiteTentativasException e) {
+                throw e;
+            }
+
+        }
+    }
+
+    private static int obterCodigoParaBusca() {
+        return obterCodigo(false);
+    }
+
+    private static int obterCodigoParaCadastro() {
+        return obterCodigo(true);
+    }
+
+    // ==============================
+    // VALIDAÇÕES
+    // ==============================
+    private static void validarCodigoMaiorQueZero(int codigoProduto) {
+        if (codigoProduto < 1) {
+            throw new CodigoProdutoInvalidoException("Código do produto deve ser maior que zero.");
+        }
+    }
+
+    private static void validarCodigoDuplicado(int novoCodigoProduto) {
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            if (novoCodigoProduto == codigos[i]) {
+                throw new CodigoDuplicadoException("❌ Código do produto já está em uso.");
+            }
+        }
+    }
+
+    private static void validarLimiteTentativas(int repeticao) {
+        if (repeticao >= MAXIMA_REPETICAO_CADASTRO_CAMPO) {
+            throw new LimiteTentativasException("Você excedeu o número máximo de tentativas.");
+        }
+    }
+
+    private static int buscarIndiceProdutoPorCodigo(int codigo) {
+
+        for (int i = 0; i < indiceAtualProduto; i++) {
+            if (codigo == codigos[i]) {
+                return i;
+            }
+        }
+
+        throw new ProdutoNaoEncontradoException("Produto não cadastrado.");
+    }
+
+
+    private static void cadastrarProduto() {
         System.out.println("=== Cadastro de Instrumento Musical ===");
         System.out.println("Informe os dados do produto:");
 
         try {
-            int codigo = obterCodigo();
+            int codigo = obterCodigo(true);
             String nome = obterNome();
             double preco = obterPreco();
             int quantidade = obterQuantidadeCadastro();
@@ -105,42 +245,6 @@ public class MusicStock {
 
     }
 
-    private static void listarProdutos() {
-
-        System.out.println("+--------+---------------------------+------------+------------+");
-        System.out.printf(FORMATO_CABECALHO, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
-        System.out.println("+--------+---------------------------+------------+------------+");
-
-        for (int i = 0; i < indiceAtualProduto; i++) {
-            System.out.printf(FORMATO_DADOS, codigos[i], nomes[i], precos[i], quantidades[i]);
-        }
-
-        System.out.println("+--------+---------------------------+------------+------------+");
-    }
-
-    private static void buscarProduto() {
-
-        try {
-            System.out.println("Código do produto:");
-
-            int codigo = Integer.parseInt(scanner.nextLine());
-            validarCodigoProduto(codigo);
-
-            int indice = buscarProdutoPorCodigo(codigo);
-
-            System.out.println("+--------+---------------------------+------------+------------+");
-            System.out.printf(FORMATO_CABECALHO, "CÓDIGO", "NOME", "PREÇO", "QUANTIDADE");
-            System.out.println("+--------+---------------------------+------------+------------+");
-
-            System.out.printf(FORMATO_DADOS, codigos[indice], nomes[indice], precos[indice], quantidades[indice]);
-
-            System.out.println("+--------+---------------------------+------------+------------+");
-
-        } catch (ProdutoNaoEncontradoException ex) {
-            System.out.println(ex.getMessage());
-        }
-
-    }
 
     private static void realizarVenda() {
 
@@ -148,9 +252,9 @@ public class MusicStock {
             System.out.println("Código do produto:");
 
             int codigo = Integer.parseInt(scanner.nextLine());
-            validarCodigoProduto(codigo);
+            validarCodigoMaiorQueZero(codigo);
 
-            int indice = buscarProdutoPorCodigo(codigo);
+            int indice = buscarIndiceProdutoPorCodigo(codigo);
             int quantidade = obterQuantidade();
 
             if (quantidade > quantidades[indice]) {
@@ -189,9 +293,9 @@ public class MusicStock {
             System.out.println("Código do produto:");
 
             int codigo = Integer.parseInt(scanner.nextLine());
-            validarCodigoProduto(codigo);
+            validarCodigoMaiorQueZero(codigo);
 
-            int indice = buscarProdutoPorCodigo(codigo);
+            int indice = buscarIndiceProdutoPorCodigo(codigo);
             int quantidade = obterQuantidade();
 
             reporQuantidadeProduto(indice, quantidade);
@@ -213,9 +317,9 @@ public class MusicStock {
             System.out.println("Código do produto:");
 
             int codigo = Integer.parseInt(scanner.nextLine());
-            validarCodigoProduto(codigo);
+            validarCodigoMaiorQueZero(codigo);
 
-            int indice = buscarProdutoPorCodigo(codigo);
+            int indice = buscarIndiceProdutoPorCodigo(codigo);
 
             System.out.println("+----------------+");
             System.out.printf("| %-14s |%n", "MOVIMENTAÇÕES");
@@ -246,69 +350,39 @@ public class MusicStock {
         String cabecalho = "| %-4s | %-8s | %-23s | %-10s | %-10s | %-16s |%n";
         String formatoDados = "| %4d | %-8s | %-23s | %10.2f | %10d | %16.2f |%n";
 
-        System.out.println("==== Resumo Geral ====");
-        System.out.println("Quantidade de produtos cadastrados\t\t: " + indiceAtualProduto);
-        System.out.println("Total de itens em estoque\t\t\t\t: " + getTotalItensEstoque());
-        System.out.println("Valor total do estoque\t\t\t\t\t: " + getValorTotalEstoque());
-        System.out.println("Produto de maior preço\t\t\t\t\t: " + getProdutoMaiorPreco());
-        System.out.println("Produto de menor preço\t\t\t\t\t: " + getProdutoMenorPreco());
-        System.out.println("Produto com menor quantidade disponível : " + getMenorQuantidade());
+        if (indiceAtualProduto == 0) {
+            System.out.println("Nenhum produto cadastrado");
+        } else {
+            System.out.println("==== Resumo Geral ====");
+            System.out.println("Quantidade de produtos cadastrados\t\t: " + indiceAtualProduto);
+            System.out.println("Total de itens em estoque\t\t\t\t: " + getTotalItensEstoque());
+            System.out.println("Valor total do estoque\t\t\t\t\t: R$ " + getValorTotalEstoque());
+            System.out.println("Produto de maior preço\t\t\t\t\t: " + getProdutoMaiorPreco());
+            System.out.println("Produto de menor preço\t\t\t\t\t: " + getProdutoMenorPreco());
+            System.out.println("Produto com menor quantidade disponível : " + getMenorQuantidade());
 
-        System.out.println("==== Detalhamento dos Produtos ====");
+            System.out.println("==== Detalhamento dos Produtos ====");
 
-        System.out.println(linha);
+            System.out.println(linha);
 
-        System.out.printf(cabecalho, "Nº", "Código", "Nome", "Preço (R$)", "Quantidade", "Valor Total (R$)");
+            System.out.printf(cabecalho, "Nº", "Código", "Nome", "Preço (R$)", "Quantidade", "Valor Total (R$)");
 
-        System.out.println(linha);
+            System.out.println(linha);
 
-        for (int i = 0; i < indiceAtualProduto; i++) {
+            for (int i = 0; i < indiceAtualProduto; i++) {
 
-            double valorTotal = precos[i] * quantidades[i];
+                double valorTotal = precos[i] * quantidades[i];
 
-            System.out.printf(formatoDados, i + 1, codigos[i], nomes[i], precos[i], quantidades[i], valorTotal);
-        }
-
-        System.out.println(linha);
-
-    }
-    // ----------------------------------------- IMPLEMENTACAO        -----------------------------------------
-
-    private static int buscarProdutoPorCodigo(int codigo) {
-
-        for (int i = 0; i < indiceAtualProduto; i++) {
-            if (codigo == codigos[i]) {
-                return i;
+                System.out.printf(formatoDados, i + 1, codigos[i], nomes[i], precos[i], quantidades[i], valorTotal);
             }
+
+            System.out.println(linha);
         }
 
-        throw new ProdutoNaoEncontradoException("Produto não cadastrado.");
+
     }
+// ----------------------------------------- IMPLEMENTACAO        -----------------------------------------
 
-    private static int obterCodigo() {
-        int tentativas = 0;
-
-        while (true) {
-
-            validarLimiteTentativas(tentativas);
-
-            try {
-                System.out.println("Código do produto:");
-
-                int codigo = Integer.parseInt(scanner.nextLine());
-                validarCodigoProduto(codigo);
-                verificarCodigoProdutoDuplicado(codigo);
-
-                return codigo;
-            } catch (NumberFormatException ex) {
-                System.out.println("❌ Entrada inválida. Insira apenas números.");
-                tentativas++;
-            } catch (IllegalArgumentException ex) {
-                System.err.println("❌ " + ex.getMessage() + " Tentando novamente.");
-                tentativas++;
-            }
-        }
-    }
 
     private static String obterNome() {
         int interacao = 0;
@@ -408,19 +482,6 @@ public class MusicStock {
         }
     }
 
-    private static void verificarCodigoProdutoDuplicado(int novoCodigoProduto) {
-        for (int i = 0; i < indiceAtualProduto; i++) {
-            if (novoCodigoProduto == codigos[i]) {
-                throw new IllegalArgumentException("Código do produto já está em uso.");
-            }
-        }
-    }
-
-    private static void validarCodigoProduto(int codigoProduto) {
-        if (codigoProduto < 1) {
-            throw new IllegalArgumentException("Código do produto deve ser maior que zero.");
-        }
-    }
 
     private static void validarNomeProduto(String nomeProduto) {
         if (nomeProduto.isBlank()) {
@@ -446,11 +507,6 @@ public class MusicStock {
         }
     }
 
-    private static void validarLimiteTentativas(int interacao) {
-        if (interacao >= MAXIMA_REPETICAO_CADASTRO_CAMPO) {
-            throw new LimiteTentativasException();
-        }
-    }
 
     private static void efetivarVenda(int indice, int quantidade) {
         registrarMovimentacao(indice, "-" + quantidade);
@@ -487,14 +543,14 @@ public class MusicStock {
         return totalItens;
     }
 
-    private static String getValorTotalEstoque() {
+    private static double getValorTotalEstoque() {
         double valorTotal = 0;
 
         for (int i = 0; i < indiceAtualProduto; i++) {
             valorTotal += (quantidades[i] * precos[i]);
         }
 
-        return "R$ " + valorTotal;
+        return valorTotal;
     }
 
     private static String getProdutoMaiorPreco() {
