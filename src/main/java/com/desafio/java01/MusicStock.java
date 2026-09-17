@@ -535,9 +535,7 @@ public class MusicStock {
     private static void validarCodigoMaiorQueZero(int codigoProduto) {
 
         if (codigoProduto < 1) {
-            throw new CodigoProdutoInvalidoException(
-                    "Código do produto deve ser maior que zero."
-            );
+            throw new CodigoProdutoInvalidoException("Código do produto deve ser maior que zero.");
         }
     }
 
@@ -560,10 +558,7 @@ public class MusicStock {
     private static void validarQuantidadeMaiorQueZero(int quantidadeProduto) {
 
         if (quantidadeProduto <= 0) {
-
-            throw new QuantidadeProdutoInvalidoException(
-                    "Quantidade deve ser maior que zero."
-            );
+            throw new QuantidadeProdutoInvalidoException("Quantidade deve ser maior que zero.");
         }
     }
 
@@ -582,10 +577,7 @@ public class MusicStock {
     private static void validarPreco(double precoProduto) {
 
         if (precoProduto <= 0) {
-
-            throw new PrecoProdutoInvalidoException(
-                    "Preço deve ser maior que zero."
-            );
+            throw new PrecoProdutoInvalidoException("Preço deve ser maior que zero.");
         }
     }
 
@@ -648,5 +640,4 @@ public class MusicStock {
             }
         }
     }
-
 }
